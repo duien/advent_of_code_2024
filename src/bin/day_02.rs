@@ -51,7 +51,7 @@ fn main() {
 
 fn parse_input(input: &str) -> Vec<Report> {
     input.lines()
-        .map(|line| parse_line(line))
+        .map(parse_line)
         .collect()
 }
 

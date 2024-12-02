@@ -25,7 +25,7 @@ fn main() {
 
 fn parse_input(input:&str) -> (Vec<i32>, Vec<i32>) {
     input.lines()
-        .map(|line| parse_line(line))
+        .map(parse_line)
         .unzip()
 }
 
@@ -43,7 +43,7 @@ fn calculate_difference(left: Vec<i32>, right: Vec<i32>) -> i32 {
     let mut right = right.clone();
     right.sort_unstable();
     
-    left.into_iter().zip(right.into_iter())
+    left.into_iter().zip(right)
         .map(|(a,b)| (a - b).abs()).sum()
 }
 
@@ -53,5 +53,5 @@ fn calculate_similarity(left: Vec<i32>, right: Vec<i32>) ->  i32 {
         right_tally.entry(n).and_modify(|counter| *counter += 1).or_insert(1);
     }
 
-    left.into_iter().map(|n| n * right_tally.get(&n).or(Some(&0)).unwrap()).sum()
+    left.into_iter().map(|n| n * right_tally.get(&n).unwrap_or(&0)).sum()
 }
