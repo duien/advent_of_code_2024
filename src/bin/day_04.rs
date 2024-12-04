@@ -21,6 +21,35 @@ fn file_input() -> String {
 fn main() {
     dbg!(find_xmas(TEST_INPUT));
     dbg!(find_xmas(file_input().as_str()));
+
+    dbg!(find_mas_x(TEST_INPUT));
+    dbg!(find_mas_x(file_input().as_str()));
+}
+
+fn find_mas_x(input: &str) -> usize {
+    let char_grid : Vec<Vec<char>> = input
+        .lines()
+        .map(|line| line.chars().collect())
+        .collect();
+    let grid_height = char_grid.len();
+    let grid_width = char_grid[0].len();
+    let mut exes = 0;
+    for (i, line) in char_grid.iter().enumerate() {
+        if i == 0 || i == grid_height - 1 { continue }
+        for (j, chr) in line.iter().enumerate() {
+            if j == 0 || j == grid_width - 1 { continue }
+            if *chr == 'A' {
+                let diag_a = (char_grid[i-1][j-1], char_grid[i+1][j+1]);
+                let diag_b = (char_grid[i-1][j+1], char_grid[i+1][j-1]);
+                if diag_a == ('M', 'S') || diag_a == ('S', 'M') {
+                    if diag_b == ('M', 'S') || diag_b == ('S', 'M') {
+                        exes += 1
+                    }
+                }
+            }
+        }
+    }
+    exes
 }
 
 fn find_xmas(input: &str) -> usize {
