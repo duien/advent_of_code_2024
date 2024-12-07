@@ -1,4 +1,4 @@
-const TEST_INPUT : &str = "\
+const TEST_INPUT: &str = "\
 47|53
 97|13
 97|61
@@ -29,31 +29,19 @@ const TEST_INPUT : &str = "\
 97,13,75,29,47
 ";
 
-use std::fs;
 use nom::{
-    IResult,
-    sequence::{
-        separated_pair,
-        terminated
-    },
-    character::complete::{
-        char,
-        digit1,
-        multispace0,
-        line_ending
-    },
-    combinator::map_res,
+    character::complete::{char, digit1, line_ending, multispace0},
     combinator::map,
-    multi::{
-        many1,
-        separated_list1,
-    }
+    combinator::map_res,
+    multi::{many1, separated_list1},
+    sequence::{separated_pair, terminated},
+    IResult,
 };
+use std::fs;
 
 fn file_input() -> String {
     let file_path = "../ruby/data/day_05.txt";
-    fs::read_to_string(file_path)
-        .expect("unable to read file")
+    fs::read_to_string(file_path).expect("unable to read file")
 }
 
 #[derive(Debug)]
@@ -66,18 +54,19 @@ impl OrderingRule {
 
         match (pos_m, pos_n) {
             (Some(m), Some(n)) => Some((m, n)),
-            _ => None
+            _ => None,
         }
     }
     fn is_satisfied_by(&self, update: &Update) -> bool {
-        self.positions_in(update).map(|(m,n)| m < n).unwrap_or(true)
+        self.positions_in(update)
+            .map(|(m, n)| m < n)
+            .unwrap_or(true)
     }
 }
 
-#[derive(Debug)]
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 struct Update {
-    pages: Vec<i32>
+    pages: Vec<i32>,
 }
 
 impl Update {
@@ -85,7 +74,7 @@ impl Update {
         rules.iter().all(|r| r.is_satisfied_by(self))
     }
 
-    fn swap(&mut self, m : usize, n : usize) {
+    fn swap(&mut self, m: usize, n: usize) {
         (self.pages[m], self.pages[n]) = (self.pages[n], self.pages[m]);
     }
 
@@ -97,7 +86,8 @@ impl Update {
         if self.satisfies_all(rules) {
             ()
         } else {
-            let first_bad_rule = rules.iter()
+            let first_bad_rule = rules
+                .iter()
                 .find(|r| !r.is_satisfied_by(&self))
                 .expect("no failing rule");
             let (m, n) = first_bad_rule.positions_in(&self).unwrap();
@@ -112,13 +102,15 @@ fn main() {
     do_the_thing(file_input().as_str());
 }
 
-fn do_the_thing(input : &str) {
+fn do_the_thing(input: &str) {
     let (rules, updates) = parse_input(input);
-    let (passing, failing) : (Vec<_>, Vec<_>) = updates.into_iter().partition(|u| u.satisfies_all(&rules));
+    let (passing, failing): (Vec<_>, Vec<_>) =
+        updates.into_iter().partition(|u| u.satisfies_all(&rules));
 
     println!("Part 1: {}", sum_middle_pages(&passing));
 
-    let fixed : Vec<_> = failing.into_iter()
+    let fixed: Vec<_> = failing
+        .into_iter()
         .map(|update| {
             let mut update = update.clone();
             update.attempt_fix(&rules);
@@ -128,19 +120,17 @@ fn do_the_thing(input : &str) {
     println!("Part 2: {}", sum_middle_pages(&fixed));
 }
 
-fn sum_middle_pages(updates : &Vec<Update>) -> i32 {
-    updates.iter()
+fn sum_middle_pages(updates: &Vec<Update>) -> i32 {
+    updates
+        .iter()
         .map(|u| u.middle_page())
         .fold(0, |acc, x| acc + x)
 }
 
-fn parse_input(input : &str) -> (Vec<OrderingRule>, Vec<Update>) {
+fn parse_input(input: &str) -> (Vec<OrderingRule>, Vec<Update>) {
     let (_, (rules, updates)) =
-        separated_pair(
-            parse_ordering_rules,
-            multispace0,
-            parse_updates)(input)
-        .expect("unable to parse input");
+        separated_pair(parse_ordering_rules, multispace0, parse_updates)(input)
+            .expect("unable to parse input");
     (rules, updates)
 }
 
@@ -153,14 +143,17 @@ fn parse_updates(input: &str) -> IResult<&str, Vec<Update>> {
 }
 
 fn update_list_from_digits(pages: Vec<i32>) -> Update {
-    Update{ pages }
+    Update { pages }
 }
 
 fn update_list(input: &str) -> IResult<&str, Update> {
-    map(separated_list1(char(','), parsed_int), update_list_from_digits)(input)
+    map(
+        separated_list1(char(','), parsed_int),
+        update_list_from_digits,
+    )(input)
 }
 
-fn ordering_rule_from_digits((m, n) : (i32, i32)) -> OrderingRule {
+fn ordering_rule_from_digits((m, n): (i32, i32)) -> OrderingRule {
     OrderingRule(m, n)
 }
 

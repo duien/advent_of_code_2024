@@ -1,4 +1,4 @@
-const TEST_INPUT :&str = "\
+const TEST_INPUT: &str = "\
 7 6 4 2 1
 1 2 7 8 9
 9 7 6 2 1
@@ -11,16 +11,18 @@ use std::fs;
 
 #[derive(Debug)]
 struct Report {
-    levels: Vec<i32>
+    levels: Vec<i32>,
 }
 
 impl Report {
     fn is_safe(&self) -> bool {
-        let diffs = self.levels.windows(2)
+        let diffs = self
+            .levels
+            .windows(2)
             .map(|w| w[1] - w[0])
             .collect::<Vec<_>>();
 
-        let stable_increase = diffs.iter().all(|d| ( 1..= 3).contains(d));
+        let stable_increase = diffs.iter().all(|d| (1..=3).contains(d));
         let stable_decrease = diffs.iter().all(|d| (-3..=-1).contains(d));
         stable_increase || stable_decrease
     }
@@ -40,8 +42,7 @@ impl Report {
 
 fn file_input() -> String {
     let file_path = "../ruby/data/day_02.txt";
-    fs::read_to_string(file_path)
-        .expect("unable to read file")
+    fs::read_to_string(file_path).expect("unable to read file")
 }
 
 fn main() {
@@ -57,22 +58,16 @@ fn main() {
 
 fn count_is_safe(input: &str) -> usize {
     let reports = parse_input(input);
-    reports.iter()
-        .filter(|r| r.is_safe())
-        .count()
+    reports.iter().filter(|r| r.is_safe()).count()
 }
 
 fn count_could_be_safe(input: &str) -> usize {
     let reports = parse_input(input);
-    reports.iter()
-        .filter(|r| r.could_be_safe())
-        .count()
+    reports.iter().filter(|r| r.could_be_safe()).count()
 }
 
 fn parse_input(input: &str) -> Vec<Report> {
-    input.lines()
-        .map(parse_line)
-        .collect()
+    input.lines().map(parse_line).collect()
 }
 
 fn parse_line(line: &str) -> Report {
@@ -80,11 +75,9 @@ fn parse_line(line: &str) -> Report {
         levels: line
             .split_whitespace()
             .map(|n| n.parse().expect("not a number"))
-            .collect()
+            .collect(),
     }
 }
-
-
 
 #[cfg(test)]
 mod safety_checking {
@@ -93,24 +86,46 @@ mod safety_checking {
     #[test]
     fn test_various_reports() {
         let (r1, r2, r3, r4, r5, r6) = (
-            Report { levels: vec![7, 6, 4, 2, 1] },
-            Report { levels: vec![1, 2, 7, 8, 9] },
-            Report { levels: vec![9, 7, 6, 2, 1] },
-            Report { levels: vec![1, 3, 2, 4, 5] },
-            Report { levels: vec![8, 6, 4, 4, 1] },
-            Report { levels: vec![1, 3, 6, 7, 9] }
+            Report {
+                levels: vec![7, 6, 4, 2, 1],
+            },
+            Report {
+                levels: vec![1, 2, 7, 8, 9],
+            },
+            Report {
+                levels: vec![9, 7, 6, 2, 1],
+            },
+            Report {
+                levels: vec![1, 3, 2, 4, 5],
+            },
+            Report {
+                levels: vec![8, 6, 4, 4, 1],
+            },
+            Report {
+                levels: vec![1, 3, 6, 7, 9],
+            },
         );
 
         assert_eq!(r1.is_safe(), true, "expected {:?} to be safe", r1);
-        assert_eq!(r2.is_safe(), false, "expected {:?} NOT to be safe", r6);
-        assert_eq!(r3.is_safe(), false, "expected {:?} NOT to be safe", r6);
-        assert_eq!(r4.is_safe(), false, "expected {:?} NOT to be safe", r6);
-        assert_eq!(r5.is_safe(), false, "expected {:?} NOT to be safe", r6);
+        assert_eq!(r2.is_safe(), false, "expected {:?} NOT to be safe", r2);
+        assert_eq!(r3.is_safe(), false, "expected {:?} NOT to be safe", r3);
+        assert_eq!(r4.is_safe(), false, "expected {:?} NOT to be safe", r4);
+        assert_eq!(r5.is_safe(), false, "expected {:?} NOT to be safe", r5);
         assert_eq!(r6.is_safe(), true, "expected {:?} to be safe", r6);
 
         assert_eq!(r1.could_be_safe(), true, "expected {:?} to become safe", r1);
-        assert_eq!(r2.could_be_safe(), false, "expected {:?} NOT to become safe", r2);
-        assert_eq!(r3.could_be_safe(), false, "expected {:?} NOT to become safe", r3) ;
+        assert_eq!(
+            r2.could_be_safe(),
+            false,
+            "expected {:?} NOT to become safe",
+            r2
+        );
+        assert_eq!(
+            r3.could_be_safe(),
+            false,
+            "expected {:?} NOT to become safe",
+            r3
+        );
         assert_eq!(r4.could_be_safe(), true, "expected {:?} to become safe", r4);
         assert_eq!(r5.could_be_safe(), true, "expected {:?} to become safe", r5);
         assert_eq!(r6.could_be_safe(), true, "expected {:?} to become safe", r6);

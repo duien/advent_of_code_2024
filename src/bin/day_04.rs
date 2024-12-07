@@ -1,4 +1,4 @@
-const TEST_INPUT : &str = "\
+const TEST_INPUT: &str = "\
 MMMSXXMASM
 MSAMXMSMSA
 AMXSXMAAMM
@@ -14,8 +14,7 @@ use std::fs;
 
 fn file_input() -> String {
     let file_path = "../ruby/data/day_04.txt";
-    fs::read_to_string(file_path)
-        .expect("unable to read file")
+    fs::read_to_string(file_path).expect("unable to read file")
 }
 
 fn main() {
@@ -27,20 +26,21 @@ fn main() {
 }
 
 fn find_mas_x(input: &str) -> usize {
-    let char_grid : Vec<Vec<char>> = input
-        .lines()
-        .map(|line| line.chars().collect())
-        .collect();
+    let char_grid: Vec<Vec<char>> = input.lines().map(|line| line.chars().collect()).collect();
     let grid_height = char_grid.len();
     let grid_width = char_grid[0].len();
     let mut exes = 0;
     for (i, line) in char_grid.iter().enumerate() {
-        if i == 0 || i == grid_height - 1 { continue }
+        if i == 0 || i == grid_height - 1 {
+            continue;
+        }
         for (j, chr) in line.iter().enumerate() {
-            if j == 0 || j == grid_width - 1 { continue }
+            if j == 0 || j == grid_width - 1 {
+                continue;
+            }
             if *chr == 'A' {
-                let diag_a = (char_grid[i-1][j-1], char_grid[i+1][j+1]);
-                let diag_b = (char_grid[i-1][j+1], char_grid[i+1][j-1]);
+                let diag_a = (char_grid[i - 1][j - 1], char_grid[i + 1][j + 1]);
+                let diag_b = (char_grid[i - 1][j + 1], char_grid[i + 1][j - 1]);
                 if diag_a == ('M', 'S') || diag_a == ('S', 'M') {
                     if diag_b == ('M', 'S') || diag_b == ('S', 'M') {
                         exes += 1
@@ -53,10 +53,7 @@ fn find_mas_x(input: &str) -> usize {
 }
 
 fn find_xmas(input: &str) -> usize {
-    let char_grid : Vec<Vec<char>> = input
-        .lines()
-        .map(|line| line.chars().collect())
-        .collect();
+    let char_grid: Vec<Vec<char>> = input.lines().map(|line| line.chars().collect()).collect();
     let grid_height = char_grid.len();
     let grid_width = char_grid[0].len();
     let mut exes = 0;
@@ -68,41 +65,69 @@ fn find_xmas(input: &str) -> usize {
                 let can_go_south = i < grid_height - 3;
                 let can_go_east = j < grid_width - 3;
 
-                if can_go_north &&
-                    char_grid[i-1][j] == 'M' &&
-                    char_grid[i-2][j] == 'A' &&
-                    char_grid[i-3][j] == 'S' { exes += 1; }
-                if can_go_south &&
-                    char_grid[i+1][j] == 'M' &&
-                    char_grid[i+2][j] == 'A' &&
-                    char_grid[i+3][j] == 'S' { exes += 1; }
-                if can_go_west &&
-                    char_grid[i][j-1] == 'M' &&
-                    char_grid[i][j-2] == 'A' &&
-                    char_grid[i][j-3] == 'S' { exes += 1; }
-                if can_go_east &&
-                    char_grid[i][j+1] == 'M' &&
-                    char_grid[i][j+2] == 'A' &&
-                    char_grid[i][j+3] == 'S' { exes += 1; }
-                if can_go_north && can_go_west &&
-                    char_grid[i-1][j-1] == 'M' &&
-                    char_grid[i-2][j-2] == 'A' &&
-                    char_grid[i-3][j-3] == 'S' { exes += 1; }
-                if can_go_north && can_go_east &&
-                    char_grid[i-1][j+1] == 'M' &&
-                    char_grid[i-2][j+2] == 'A' &&
-                    char_grid[i-3][j+3] == 'S' { exes += 1; }
-                if can_go_south && can_go_west &&
-                    char_grid[i+1][j-1] == 'M' &&
-                    char_grid[i+2][j-2] == 'A' &&
-                    char_grid[i+3][j-3] == 'S' { exes += 1; }
-                if can_go_south && can_go_east &&
-                    char_grid[i+1][j+1] == 'M' &&
-                    char_grid[i+2][j+2] == 'A' &&
-                    char_grid[i+3][j+3] == 'S' { exes += 1; }
+                if can_go_north
+                    && char_grid[i - 1][j] == 'M'
+                    && char_grid[i - 2][j] == 'A'
+                    && char_grid[i - 3][j] == 'S'
+                {
+                    exes += 1;
+                }
+                if can_go_south
+                    && char_grid[i + 1][j] == 'M'
+                    && char_grid[i + 2][j] == 'A'
+                    && char_grid[i + 3][j] == 'S'
+                {
+                    exes += 1;
+                }
+                if can_go_west
+                    && char_grid[i][j - 1] == 'M'
+                    && char_grid[i][j - 2] == 'A'
+                    && char_grid[i][j - 3] == 'S'
+                {
+                    exes += 1;
+                }
+                if can_go_east
+                    && char_grid[i][j + 1] == 'M'
+                    && char_grid[i][j + 2] == 'A'
+                    && char_grid[i][j + 3] == 'S'
+                {
+                    exes += 1;
+                }
+                if can_go_north
+                    && can_go_west
+                    && char_grid[i - 1][j - 1] == 'M'
+                    && char_grid[i - 2][j - 2] == 'A'
+                    && char_grid[i - 3][j - 3] == 'S'
+                {
+                    exes += 1;
+                }
+                if can_go_north
+                    && can_go_east
+                    && char_grid[i - 1][j + 1] == 'M'
+                    && char_grid[i - 2][j + 2] == 'A'
+                    && char_grid[i - 3][j + 3] == 'S'
+                {
+                    exes += 1;
+                }
+                if can_go_south
+                    && can_go_west
+                    && char_grid[i + 1][j - 1] == 'M'
+                    && char_grid[i + 2][j - 2] == 'A'
+                    && char_grid[i + 3][j - 3] == 'S'
+                {
+                    exes += 1;
+                }
+                if can_go_south
+                    && can_go_east
+                    && char_grid[i + 1][j + 1] == 'M'
+                    && char_grid[i + 2][j + 2] == 'A'
+                    && char_grid[i + 3][j + 3] == 'S'
+                {
+                    exes += 1;
+                }
             }
         }
     }
-    
+
     exes
 }

@@ -1,44 +1,27 @@
 #![allow(unused_imports)]
 #![allow(dead_code)]
 
-const TEST_INPUT : &str = "xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))";
-const TEST_2_INPUT: &str = "xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))";
+const TEST_INPUT: &str = "xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))";
+const TEST_2_INPUT: &str =
+    "xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))";
 
-use std::fs;
 use regex::Regex;
+use std::fs;
 
 use nom::{
-    IResult,
-    Finish,
-    sequence::delimited,
-    sequence::preceded,
-    multi::many1,
-    multi::many0,
-    multi::separated_list1,
-    sequence::terminated,
-    sequence::tuple,
-    sequence::separated_pair,
-    character::complete::char,
-    character::complete::one_of,
-    character::complete::digit1,
-    bytes::complete::is_not,
-    bytes::complete::tag,
-    bytes::complete::take,
-    bytes::complete::take_until,
-    combinator::map_res,
-    branch::alt
+    branch::alt, bytes::complete::is_not, bytes::complete::tag, bytes::complete::take,
+    bytes::complete::take_until, character::complete::char, character::complete::digit1,
+    character::complete::one_of, combinator::map_res, multi::many0, multi::many1,
+    multi::separated_list1, sequence::delimited, sequence::preceded, sequence::separated_pair,
+    sequence::terminated, sequence::tuple, Finish, IResult,
 };
-
 
 fn file_input() -> String {
     let file_path = "../ruby/data/day_03.txt";
-    fs::read_to_string(file_path)
-        .expect("unable to read file")
+    fs::read_to_string(file_path).expect("unable to read file")
 }
 
-
 fn main() {
-
     dbg!(mul_args("mul(a,b)"));
     dbg!(mul_args("mul(5,6)"));
     dbg!(mul_args("mul(65)"));
@@ -57,14 +40,14 @@ fn main() {
     // leading garbage then a good mul expression, repeatedly
     dbg!(many_after_garbage(TEST_INPUT));
 
-    let (_, result) : (&str, Vec<(i32, i32)>) = many_after_garbage(TEST_INPUT)
-        .expect("parse failure");
+    let (_, result): (&str, Vec<(i32, i32)>) =
+        many_after_garbage(TEST_INPUT).expect("parse failure");
     dbg!(&result);
 
-    let result : Vec<i32> = result.into_iter().map(|(m,n)| m * n).collect();
+    let result: Vec<i32> = result.into_iter().map(|(m, n)| m * n).collect();
     dbg!(&result);
 
-    let sum : i32 = result.into_iter().fold(0, |acc, x| acc + x);
+    let sum: i32 = result.into_iter().fold(0, |acc, x| acc + x);
     dbg!(&sum);
 
     dbg!(parse_and_sum(TEST_INPUT));
@@ -72,9 +55,11 @@ fn main() {
 }
 
 fn parse_and_sum(input: &str) -> i32 {
-    let (_, result) : (&str, Vec<(i32, i32)>) = many_after_garbage(input)
-        .expect("parse failure");
-    result.into_iter().map(|(m,n)| m * n).fold(0, |acc, x| acc + x)
+    let (_, result): (&str, Vec<(i32, i32)>) = many_after_garbage(input).expect("parse failure");
+    result
+        .into_iter()
+        .map(|(m, n)| m * n)
+        .fold(0, |acc, x| acc + x)
 }
 
 // as many valid mul expressions as we can get
@@ -94,11 +79,7 @@ fn after_garbage(input: &str) -> IResult<&str, (i32, i32)> {
 
 // parens containing two numbers
 fn parens(input: &str) -> IResult<&str, (i32, i32)> {
-    delimited(
-        char('('),
-        two_numbers,
-        char(')')
-    )(input)
+    delimited(char('('), two_numbers, char(')'))(input)
 }
 
 // two numbers separated by a comma
