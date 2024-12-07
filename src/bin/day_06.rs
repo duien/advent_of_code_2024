@@ -11,13 +11,13 @@ const TEST_INPUT: &str = "\
 ......#...
 ";
 
+use grid::*;
 use nom::character::complete::{newline, one_of};
 use nom::combinator::{all_consuming, map};
 use nom::multi::many1;
 use nom::sequence::terminated;
 use nom::IResult;
 use std::collections::HashSet;
-use grid::*;
 use std::fs;
 
 fn main() {
@@ -26,19 +26,23 @@ fn main() {
 }
 
 fn do_the_thing(input: &str) {
-    let mut lab : Laboratory = parse_input(input).into();
-    let mut visited : HashSet<(usize, usize)> = HashSet::new();
+    let mut lab: Laboratory = parse_input(input).into();
+    let mut visited: HashSet<(usize, usize)> = HashSet::new();
     while let Some((pos, guard)) = lab.guard() {
         visited.insert(pos);
-        if let LabItem::Guard{ facing: dir } = guard {
+        if let LabItem::Guard { facing: dir } = guard {
             if let Ok(dest) = shift(pos, dir) {
                 let (r, c) = dest;
                 let at_dest = lab.grid.get(r, c);
                 match at_dest {
                     Some(LabItem::Nothing) => lab.grid.swap(pos, dest),
-                    Some(LabItem::Guard{ .. }) => unimplemented!(),
-                    Some(LabItem::Obstacle) => lab.grid[pos] = LabItem::Guard{ facing: dir.to_clockwise()},
-                    None => lab.grid[pos] = LabItem::Nothing
+                    Some(LabItem::Guard { .. }) => unimplemented!(),
+                    Some(LabItem::Obstacle) => {
+                        lab.grid[pos] = LabItem::Guard {
+                            facing: dir.to_clockwise(),
+                        }
+                    }
+                    None => lab.grid[pos] = LabItem::Nothing,
                 }
             }
         }
@@ -47,31 +51,30 @@ fn do_the_thing(input: &str) {
     println!("VISITED: {}", visited.len());
 }
 
-fn shift((r, c) : (usize, usize), dir: &Direction) -> Result<(usize, usize), &'static str> {
+fn shift((r, c): (usize, usize), dir: &Direction) -> Result<(usize, usize), &'static str> {
     let (r, c) = match dir {
         Direction::North => (r.checked_sub(1), Some(c)),
         Direction::South => (Some(r + 1), Some(c)),
         Direction::East => (Some(r), Some(c + 1)),
-        Direction::West => (Some(r), c.checked_sub(1))
+        Direction::West => (Some(r), c.checked_sub(1)),
     };
 
-    match (r, c){
+    match (r, c) {
         (Some(r), Some(c)) => Ok((r, c)),
-        _ => Err("out of bounds")
+        _ => Err("out of bounds"),
     }
 }
 
 #[derive(Debug)]
 struct Laboratory {
-    // guard: Option<Position>,
     grid: Grid<LabItem>,
 }
 
 impl Laboratory {
     fn guard(&self) -> Option<((usize, usize), &LabItem)> {
-        self.grid.indexed_iter()
+        self.grid
+            .indexed_iter()
             .find(|(_point, item)| item.is_guard())
-            // .map(|(point, _)| point )
     }
 }
 
@@ -94,8 +97,8 @@ impl Direction {
         match self {
             Self::North => Self::East,
             Self::South => Self::West,
-            Self::East  => Self::South,
-            Self::West => Self::North
+            Self::East => Self::South,
+            Self::West => Self::North,
         }
     }
 }
@@ -104,43 +107,14 @@ impl Direction {
 enum LabItem {
     Nothing,
     Obstacle,
-    Guard { facing: Direction }
+    Guard { facing: Direction },
 }
-
-// impl LabItem {
-//     fn turn_clockwise(&mut self) {
-//         match self {
-//             Self::Guard { facing: dir } => {
-//                 let new_direction = ;
-//                 self.facing = new_direction;
-//                 self
-//             },
-//             _ => unimplemented!("only guards turn")
-//         }
-
-
-//     }
-// }
 
 impl LabItem {
     fn is_guard(&self) -> bool {
         match self {
-            Self::Guard{ .. } => true,
-            _ => false
-        }
-    }
-
-    fn is_obstacle(&self) -> bool {
-        match self {
-            Self::Obstacle => true,
-            _ => false
-        }
-    }
-
-    fn is_nothing(&self) -> bool {
-        match self {
-            Self::Nothing => true,
-            _ => false
+            Self::Guard { .. } => true,
+            _ => false,
         }
     }
 }
@@ -150,7 +124,9 @@ impl From<char> for LabItem {
         match c {
             '.' => Self::Nothing,
             '#' => Self::Obstacle,
-            '^' => Self::Guard{facing: Direction::North},
+            '^' => Self::Guard {
+                facing: Direction::North,
+            },
             _ => unimplemented!(),
         }
     }
@@ -161,15 +137,13 @@ fn file_input() -> String {
     fs::read_to_string(file_path).expect("unable to read file")
 }
 
-
 fn parse_input(input: &str) -> Grid<LabItem> {
     let result: IResult<&str, Grid<_>> = all_consuming(map(
-            many1(terminated(
-                many1(map(one_of(".#^"), LabItem::from)),
-                newline,
-            )),
-            Grid::from,
+        many1(terminated(
+            many1(map(one_of(".#^"), LabItem::from)),
+            newline,
+        )),
+        Grid::from,
     ))(input);
-
     result.expect("parse failure").1
 }
