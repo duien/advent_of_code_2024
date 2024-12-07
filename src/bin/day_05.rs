@@ -60,21 +60,22 @@ fn file_input() -> String {
 struct OrderingRule(i32, i32);
 
 impl OrderingRule {
-    fn is_satisfied_by(&self, update: &Update) -> bool {
-        // println!("  {:?}", self);
+    fn positions_in(&self, update: &Update) -> Option<(usize, usize)> {
         let pos_m = update.pages.iter().position(|&x| x == self.0);
         let pos_n = update.pages.iter().position(|&x| x == self.1);
-        
+
         match (pos_m, pos_n) {
-            (None, None) => true,
-            (None, _) => true,
-            (_, None) => true,
-            (Some(m), Some(n)) => m < n
+            (Some(m), Some(n)) => Some((m, n)),
+            _ => None
         }
+    }
+    fn is_satisfied_by(&self, update: &Update) -> bool {
+        self.positions_in(update).map(|(m,n)| m < n).unwrap_or(true)
     }
 }
 
 #[derive(Debug)]
+#[derive(Clone)]
 struct Update {
     pages: Vec<i32>
 }
@@ -84,32 +85,61 @@ impl Update {
         rules.iter().all(|r| r.is_satisfied_by(self))
     }
 
+    fn swap(&mut self, m : usize, n : usize) {
+        (self.pages[m], self.pages[n]) = (self.pages[n], self.pages[m]);
+    }
+
     fn middle_page(&self) -> i32 {
         self.pages[self.pages.len() / 2]
+    }
+
+    fn attempt_fix(&mut self, rules: &Vec<OrderingRule>) {
+        if self.satisfies_all(rules) {
+            ()
+        } else {
+            let first_bad_rule = rules.iter()
+                .find(|r| !r.is_satisfied_by(&self))
+                .expect("no failing rule");
+            let (m, n) = first_bad_rule.positions_in(&self).unwrap();
+            self.swap(m, n);
+            self.attempt_fix(rules);
+        }
     }
 }
 
 fn main() {
-    let (rules, updates) = parse_input(TEST_INPUT);
-    let page_sum = sum_valid_pages(rules, updates);
-    println!("ANSWER IS: {page_sum}");
-
-    let (rules, updates) = parse_input(file_input().as_str());
-    let page_sum = sum_valid_pages(rules, updates);
-    println!("ANSWER IS: {page_sum}");
-
-    
+    do_the_thing(TEST_INPUT);
+    do_the_thing(file_input().as_str());
 }
 
-fn sum_valid_pages(rules : Vec<OrderingRule>, updates: Vec<Update>) -> i32 {
+fn do_the_thing(input : &str) {
+    let (rules, updates) = parse_input(input);
+    let (passing, failing) : (Vec<_>, Vec<_>) = updates.into_iter().partition(|u| u.satisfies_all(&rules));
+
+    println!("Part 1: {}", sum_middle_pages(&passing));
+
+    let fixed : Vec<_> = failing.into_iter()
+        .map(|update| {
+            let mut update = update.clone();
+            update.attempt_fix(&rules);
+            update
+        })
+        .collect();
+    println!("Part 2: {}", sum_middle_pages(&fixed));
+}
+
+fn sum_middle_pages(updates : &Vec<Update>) -> i32 {
     updates.iter()
-        .filter(|u| u.satisfies_all(&rules))
         .map(|u| u.middle_page())
         .fold(0, |acc, x| acc + x)
 }
 
 fn parse_input(input : &str) -> (Vec<OrderingRule>, Vec<Update>) {
-    let (_, (rules, updates)) = separated_pair(parse_ordering_rules, multispace0, parse_updates)(input)
+    let (_, (rules, updates)) =
+        separated_pair(
+            parse_ordering_rules,
+            multispace0,
+            parse_updates)(input)
         .expect("unable to parse input");
     (rules, updates)
 }
