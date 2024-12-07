@@ -16,58 +16,67 @@ use nom::combinator::{all_consuming, map};
 use nom::multi::many1;
 use nom::sequence::terminated;
 use nom::IResult;
-use std::fmt;
+use std::collections::HashSet;
+use grid::*;
 use std::fs;
 
 fn main() {
-    let lab = parse_input(TEST_INPUT);
-
-    dbg!(&lab);
-    println!("{}", lab.grid)
+    do_the_thing(TEST_INPUT);
+    do_the_thing(&file_input().as_str())
 }
 
-fn file_input() -> String {
-    let file_path = "../ruby/data/day_05.txt";
-    fs::read_to_string(file_path).expect("unable to read file")
+fn do_the_thing(input: &str) {
+    let mut lab : Laboratory = parse_input(input).into();
+    let mut visited : HashSet<(usize, usize)> = HashSet::new();
+    while let Some((pos, guard)) = lab.guard() {
+        visited.insert(pos);
+        if let LabItem::Guard{ facing: dir } = guard {
+            if let Ok(dest) = shift(pos, dir) {
+                let (r, c) = dest;
+                let at_dest = lab.grid.get(r, c);
+                match at_dest {
+                    Some(LabItem::Nothing) => lab.grid.swap(pos, dest),
+                    Some(LabItem::Guard{ .. }) => unimplemented!(),
+                    Some(LabItem::Obstacle) => lab.grid[pos] = LabItem::Guard{ facing: dir.to_clockwise()},
+                    None => lab.grid[pos] = LabItem::Nothing
+                }
+            }
+        }
+    }
+
+    println!("VISITED: {}", visited.len());
 }
 
+fn shift((r, c) : (usize, usize), dir: &Direction) -> Result<(usize, usize), &'static str> {
+    let (r, c) = match dir {
+        Direction::North => (r.checked_sub(1), Some(c)),
+        Direction::South => (Some(r + 1), Some(c)),
+        Direction::East => (Some(r), Some(c + 1)),
+        Direction::West => (Some(r), c.checked_sub(1))
+    };
 
-fn parse_input(input: &str) -> Laboratory {
-    let result: IResult<&str, Laboratory> = all_consuming(map(
-        map(
-            many1(terminated(
-                many1(map(one_of(".#^"), Location::from)),
-                newline,
-            )),
-            Grid::from,
-        ),
-        Laboratory::from,
-    ))(input);
-
-    result.expect("parse failure").1
-}
-
-
-#[derive(Debug)]
-struct Position(usize, usize);
-
-#[derive(Debug)]
-struct Grid<T>(Vec<Vec<T>>);
-
-impl<T> From<Vec<Vec<T>>> for Grid<T> {
-    fn from(vec: Vec<Vec<T>>) -> Self {
-        Self(vec)
+    match (r, c){
+        (Some(r), Some(c)) => Ok((r, c)),
+        _ => Err("out of bounds")
     }
 }
 
 #[derive(Debug)]
 struct Laboratory {
     // guard: Option<Position>,
-    grid: Grid<Location>,
+    grid: Grid<LabItem>,
 }
 
-impl From<Grid<Location>> for Laboratory {
-    fn from(grid: Grid<Location>) -> Self {
+impl Laboratory {
+    fn guard(&self) -> Option<((usize, usize), &LabItem)> {
+        self.grid.indexed_iter()
+            .find(|(_point, item)| item.is_guard())
+            // .map(|(point, _)| point )
+    }
+}
+
+impl From<Grid<LabItem>> for Laboratory {
+    fn from(grid: Grid<LabItem>) -> Self {
         Self { grid }
     }
 }
@@ -80,51 +89,87 @@ enum Direction {
     West,
 }
 
-#[derive(Debug)]
-enum Location {
-    Empty,
-    Obstacle,
-    Guard(Direction),
-}
-
-impl fmt::Display for Location {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Location::Empty => ".",
-                Location::Obstacle => "#",
-                Location::Guard(direction) => match direction {
-                    Direction::North => "^",
-                    Direction::South => "v",
-                    Direction::East => ">",
-                    Direction::West => "<",
-                },
-            }
-        )
-    }
-}
-
-impl fmt::Display for Grid<Location> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for row in &self.0 {
-            for l in row {
-                write!(f, "{}", l)?;
-            }
-            writeln!(f)?;
+impl Direction {
+    fn to_clockwise(&self) -> Self {
+        match self {
+            Self::North => Self::East,
+            Self::South => Self::West,
+            Self::East  => Self::South,
+            Self::West => Self::North
         }
-        Ok(())
     }
 }
 
-impl From<char> for Location {
+#[derive(Debug)]
+enum LabItem {
+    Nothing,
+    Obstacle,
+    Guard { facing: Direction }
+}
+
+// impl LabItem {
+//     fn turn_clockwise(&mut self) {
+//         match self {
+//             Self::Guard { facing: dir } => {
+//                 let new_direction = ;
+//                 self.facing = new_direction;
+//                 self
+//             },
+//             _ => unimplemented!("only guards turn")
+//         }
+
+
+//     }
+// }
+
+impl LabItem {
+    fn is_guard(&self) -> bool {
+        match self {
+            Self::Guard{ .. } => true,
+            _ => false
+        }
+    }
+
+    fn is_obstacle(&self) -> bool {
+        match self {
+            Self::Obstacle => true,
+            _ => false
+        }
+    }
+
+    fn is_nothing(&self) -> bool {
+        match self {
+            Self::Nothing => true,
+            _ => false
+        }
+    }
+}
+
+impl From<char> for LabItem {
     fn from(c: char) -> Self {
         match c {
-            '.' => Self::Empty,
+            '.' => Self::Nothing,
             '#' => Self::Obstacle,
-            '^' => Self::Guard(Direction::North),
+            '^' => Self::Guard{facing: Direction::North},
             _ => unimplemented!(),
         }
     }
+}
+
+fn file_input() -> String {
+    let file_path = "../ruby/data/day_06.txt";
+    fs::read_to_string(file_path).expect("unable to read file")
+}
+
+
+fn parse_input(input: &str) -> Grid<LabItem> {
+    let result: IResult<&str, Grid<_>> = all_consuming(map(
+            many1(terminated(
+                many1(map(one_of(".#^"), LabItem::from)),
+                newline,
+            )),
+            Grid::from,
+    ))(input);
+
+    result.expect("parse failure").1
 }
