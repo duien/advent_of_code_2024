@@ -51,6 +51,10 @@ fn do_the_thing(input: &str) {
     println!("VISITED: {}", visited.len());
 }
 
+// Given a point and a direction, move by 1 in that direction. If the
+// destination would go off the north or west side of the grid (becoming
+// negative) return Err variant instead. It does not check if it's gone
+// too far south or east, since it doesn't know the grid size
 fn shift((r, c): (usize, usize), dir: &Direction) -> Result<(usize, usize), &'static str> {
     let (r, c) = match dir {
         Direction::North => (r.checked_sub(1), Some(c)),
@@ -71,6 +75,7 @@ struct Laboratory {
 }
 
 impl Laboratory {
+    // Where is the guard in this lab?
     fn guard(&self) -> Option<((usize, usize), &LabItem)> {
         self.grid
             .indexed_iter()
@@ -79,6 +84,7 @@ impl Laboratory {
 }
 
 impl From<Grid<LabItem>> for Laboratory {
+    // Create a lab from a grid of lab items
     fn from(grid: Grid<LabItem>) -> Self {
         Self { grid }
     }
@@ -93,6 +99,7 @@ enum Direction {
 }
 
 impl Direction {
+    // What direction is to clockwise of this one?
     fn to_clockwise(&self) -> Self {
         match self {
             Self::North => Self::East,
@@ -111,6 +118,7 @@ enum LabItem {
 }
 
 impl LabItem {
+    // Is this lab item a guard?
     fn is_guard(&self) -> bool {
         match self {
             Self::Guard { .. } => true,
@@ -120,6 +128,7 @@ impl LabItem {
 }
 
 impl From<char> for LabItem {
+    // Turn a character from the input into the corresponding lab item
     fn from(c: char) -> Self {
         match c {
             '.' => Self::Nothing,

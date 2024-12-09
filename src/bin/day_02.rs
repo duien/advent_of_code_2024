@@ -9,6 +9,71 @@ const TEST_INPUT: &str = "\
 
 use std::fs;
 
+// Add to report struct a dampened: Option<usize>
+// ... maybe a more complicated Enum
+// the report could be
+// - safe without dampening
+// - safe with specific dampening
+// - not yet checked
+// I want some of those differences for state as I'm checking and some
+// for skipping computation
+
+// safe is Option
+// Some(true) means you've checked and it is
+// Some(false) means you've checked and it's not
+// None means you don't know and need to check
+
+// but it means that _checking_ safe requires mutability (sort of)
+
+// the dampening position and the direction are only needed during calculation
+
+/*
+
+totally OK
+7 6 4 2 1
+7 6          : -1 ok
+  6 4        : -2 ok
+    4 2      : -2 ok
+      2 1    : -1 ok
+
+unrecoverable (middle)
+1 2 7 8 9
+1 2          : +1 ok
+  2 7        : +5 bad
+------------
+1   7        : +6 bad (skip left)
+  2  8       : +6 bad (skip right)
+
+unrecoverable (beginning)
+1 6 7 8 9
+1 6          : +5 bad
+------------
+  6          : not a pair
+1   7        : + 6 bad
+
+recoverable
+
+
+recover then fail again
+
+
+failure types:
+- switched direction (but individual step sizes are ok)
+- step size is bad (but direction is ok)
+- those happening in an interlapping way but opposite??
+
+
+
+=====
+direction: [unknown, increasing, decreasing]
+   (or Some(Direction))
+dampened: [false, posistion] // could just be true/false
+
+is_safe_pair_in_context
+ (left, right), direction, dampening
+
+ */
+
 #[derive(Debug)]
 struct Report {
     levels: Vec<i32>,
