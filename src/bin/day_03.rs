@@ -17,7 +17,7 @@ use nom::{
 };
 
 fn file_input() -> String {
-    let file_path = "../ruby/data/day_03.txt";
+    let file_path = "data/day_03.txt";
     fs::read_to_string(file_path).expect("unable to read file")
 }
 

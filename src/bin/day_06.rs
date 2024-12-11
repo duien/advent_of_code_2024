@@ -142,7 +142,7 @@ impl From<char> for LabItem {
 }
 
 fn file_input() -> String {
-    let file_path = "../ruby/data/day_06.txt";
+    let file_path = "data/day_06.txt";
     fs::read_to_string(file_path).expect("unable to read file")
 }
 

@@ -17,7 +17,7 @@ fn main() {
     );
     println!("SIMILARITY: {}", calculate_similarity(left, right));
 
-    let file_path = "../ruby/data/day_01.txt";
+    let file_path = "data/day_01.txt";
     let input = fs::read_to_string(file_path).expect("unable to read file");
 
     println!("\n--- REAL ---");
